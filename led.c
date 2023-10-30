@@ -65,9 +65,9 @@ void led_init( bool inverted, int ledRxPin, int ledTXPin, int ledErrorPin_ ) {
     led_rx_on_until(300);
     led_err_on_until(300);
 
-    add_alarm_in_us(1, led_tx_alarm_off, NULL, true);
-    add_alarm_in_us(2, led_rx_alarm_off, NULL, true);
-    add_alarm_in_us(3, led_err_alarm_off, NULL, true);
+    add_alarm_in_us(12345, led_tx_alarm_off, NULL, true);
+    add_alarm_in_us(123456, led_rx_alarm_off, NULL, true);
+    add_alarm_in_us(234567, led_err_alarm_off, NULL, true);
 }
 
 void led_tx_on_until( uint64_t delta_ms ) {
