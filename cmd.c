@@ -28,6 +28,7 @@
 #include <hardware/clocks.h>
 #include <hardware/gpio.h>
 
+#include "led.h"
 #include "jtag.pio.h"
 #include "tusb.h"
 #include "pio_jtag.h"
@@ -238,8 +239,9 @@ static uint32_t cmd_xfer(pio_jtag_inst_t* jtag, const uint8_t *commands, bool ex
   {
     output_buffer = tx_buf;
     memset(output_buffer, 0, (transferred_bits + 7) / 8);
+    led_rx_on_until(30);
   }
-
+  led_tx_on_until(30);
   jtag_transfer(jtag, transferred_bits, commands+2, output_buffer);
 
   return (transferred_bits + 7) / 8;
@@ -298,9 +300,10 @@ static uint32_t cmd_clk(pio_jtag_inst_t *jtag, const uint8_t *commands, bool rea
 }
 
 static void cmd_setvoltage(const uint8_t *commands) {
+  led_err_on_until(100);
   (void)commands;
 }
 
 static void cmd_gotobootloader(void) {
-
+  led_err_on_until(100);
 }

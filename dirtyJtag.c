@@ -73,7 +73,7 @@ void jtag_main_task()
         tud_task();// tinyusb device task
         if (tud_vendor_available())
         {
-            led_rx( 1 );
+            led_rx_on_until(30);
             uint bnum = wr_buffer_number;
             uint count = tud_vendor_read(buffer_infos[wr_buffer_number].buffer, 64);
             if (count != 0)
@@ -89,7 +89,6 @@ void jtag_main_task()
                 multicore_fifo_push_blocking(bnum);
 #endif
             }
-            led_rx( 0 );
         } else {
 #if ( USB_CDC_UART_BRIDGE )           
             cdc_uart_task();

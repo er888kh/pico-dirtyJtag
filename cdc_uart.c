@@ -45,16 +45,9 @@ struct uart_device
 
 static void dma_handler();
 
-static uint n_bits(uint n)
+static inline uint n_bits(uint n)
 {
-	int i;
-	for (i = 0; i < 31; i++)
-	{
-		n >>= 1;
-		if (n == 0)
-		break;
-	}
-	return i+1;
+	return 31 - __builtin_clz(n);
 }
 
 uint setup_usart_tx_dma(uart_inst_t *uart, void *tx_address, uint buffer_size)
@@ -148,9 +141,11 @@ static void dma_handler()
 		if (ints & (1 << uart->rx_dma_channel)) //dma_channel_hw_addr(rx_dma_channel)->transfer_count == 0) // dma_channel_get_irq1_status(rx_dma_channel))
 		{
 			dma_channel_set_write_addr(uart->rx_dma_channel, &uart->rx_buf[0], true);
+			//ints ^= (1 << uart->rx_dma_channel);
 		}
 		if (ints & (1 << uart->tx_dma_channel)) //(dma_channel_hw_addr(tx_dma_channel)->transfer_count == 0) // (dma_channel_get_irq1_status(tx_dma_channel))
 		{
+			//ints ^= (1 << uart->tx_dma_channel);
 			uint8_t *ra = (uint8_t *)(dma_channel_hw_addr(uart->tx_dma_channel)->read_addr);
 			size_t space = (uart->tx_write_address >= ra) ? (uart->tx_write_address - ra) : (uart->tx_write_address + TX_BUFFER_SIZE - ra);
 			if (space > 0)
@@ -185,7 +180,7 @@ void cdc_uart_task(void)
 			uart->n_checks++;
 			if ((space >= FULL_SWO_PACKET) || ((space != 0) && (uart->n_checks > 4)))
 			{
-				led_tx( 1 );
+				led_tx_on_until(30); // ms
 				uart->n_checks = 0;
 				uint32_t capacity = tud_cdc_n_write_available(uart->index);
 				uint32_t size_out = MIN(space, capacity);
@@ -199,13 +194,12 @@ void cdc_uart_task(void)
 					if (uart->rx_read_address >= &uart->rx_buf[RX_BUFFER_SIZE])
 						uart->rx_read_address -= RX_BUFFER_SIZE;
 				}
-				led_tx( 0 );
 			}
 			uint ra = tud_cdc_n_available(uart->index);
 			size_t watermark = MIN(ra, &uart->tx_buf[TX_BUFFER_SIZE] - uart->tx_write_address);
 			if (watermark > 0)
 			{
-				led_rx( 1 );
+				led_rx_on_until(30); // ms
 				size_t tx_len;
 				tx_len = tud_cdc_n_read(uart->index, (void*)uart->tx_write_address, watermark);
 				//be careful about modifying tx_write_address as it is used in the IRQ handler
@@ -221,7 +215,6 @@ void cdc_uart_task(void)
 					size_t space = (uart->tx_write_address >= ra) ? (uart->tx_write_address - ra) : (uart->tx_write_address + TX_BUFFER_SIZE - ra);
 					dma_channel_set_trans_count(uart->tx_dma_channel, space, true);
 				}
-				led_rx( 0 );
 			}
 		}
 		else if (uart->is_connected)

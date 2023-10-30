@@ -28,7 +28,7 @@
 
 #include "dirtyJtagConfig.h"
 
-#define USBUSART_BAUDRATE 115200
+#define USBUSART_BAUDRATE 1000000
 
 /* For speed this is set to the USB transfer size */
 #define FULL_SWO_PACKET (64)
